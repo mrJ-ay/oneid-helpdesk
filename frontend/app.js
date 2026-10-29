@@ -536,6 +536,19 @@ loginForm.addEventListener("submit", async (e) => {
 
 // Bootstrap
 (async function init() {
+  const params = new URLSearchParams(location.search);
+  const svcParam = params.get("service");
+  if (svcParam) {
+    const match = Array.from(serviceSelect.options).find(
+      (opt) => opt.value.toLowerCase() === svcParam.trim().toLowerCase()
+    );
+    if (match) serviceSelect.value = match.value;
+  }
+  const catParam = params.get("category");
+  if (catParam && CATEGORY_LABELS[catParam]) {
+    categorySelect.value = catParam;
+  }
+
   if (token) {
     try {
       currentUser = await api("/api/auth/me");
