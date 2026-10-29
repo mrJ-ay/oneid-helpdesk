@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HELPDESK · ONEID 통합 고객센터</title>
+  <link rel="stylesheet" href="style.css?v=20261029">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/">
+        <span class="brand-mark">HD</span>
+        <span class="brand-text">HELPDESK <small>통합 고객센터</small></span>
+      </a>
+      <nav class="topnav">
+        <a href="https://oneid-icvq.onrender.com" target="_blank" rel="noopener">ONEID 계정</a>
+        <a href="https://atelier-j.vercel.app" target="_blank" rel="noopener">ATELIER J</a>
+        <div id="authArea" class="auth-area">
+          <button id="openLoginBtn" class="btn btn-outline btn-sm" type="button">ONEID 로그인</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">CUSTOMER SUPPORT &amp; ACCOUNT APPEAL</p>
+        <h1>ONEID 통합 고객센터</h1>
+        <p class="hero-desc">
+          전체 연결 서비스의 <strong>1:1 문의</strong>, <strong>오류 제보</strong>, <strong>정지 계정 소명/이의신청</strong>을 접수하고 관리자 답변을 확인합니다.<br>
+          로그인이 차단된 정지 계정도 <strong>비로그인 상태</strong>로 바로 소명 문의를 등록하고 답변을 조회할 수 있습니다.
+        </p>
+      </div>
+      <div id="suspendedBanner" class="suspended-banner" hidden>
+        <div class="suspended-banner-text">
+          <strong>현재 이용이 제한된 ONEID 계정입니다.</strong>
+          <p id="suspendedReasonText">정지 사유를 확인하고 아래에서 소명/이의신청을 접수해 주세요.</p>
+        </div>
+        <button id="quickAppealBtn" class="btn btn-danger btn-sm" type="button">정지 소명 작성하기</button>
+      </div>
+    </section>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="write" type="button">1:1 문의 · 정지 소명 작성</button>
+      <button class="tab" data-tab="my" type="button">내 문의 내역 · 답변 확인</button>
+      <button class="tab" data-tab="admin" id="adminTabBtn" type="button">
+        관리자 질문목록 <span id="adminBadge" class="tab-badge" hidden>0</span>
+      </button>
+    </div>
+
+    <div id="globalNotice" class="notice" hidden role="status"></div>
+
+    <!-- TAB 1: 문의 작성 -->
+    <section id="panel-write" class="panel">
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>새 문의 / 소명서 접수</h2>
+            <p class="sub">관리자가 확인 후 순차적으로 답변을 등록해 드립니다.</p>
+          </div>
+          <span id="writeModeBadge" class="mode-badge">비로그인 접수 모드</span>
+        </div>
+
+        <form id="ticketForm" class="ticket-form">
+          <div class="form-grid-2">
+            <label>
+              <span>문의 유형</span>
+              <select id="categorySelect" required>
+                <option value="inquiry">일반 1:1 문의</option>
+                <option value="appeal">계정 정지 소명 / 이의신청</option>
+                <option value="bug">오류 및 버그 제보</option>
+                <option value="suggestion">건의사항 / 기능 제안</option>
+              </select>
+            </label>
+
+            <label>
+              <span>관련 서비스</span>
+              <select id="serviceSelect" required>
+                <option value="ONEID">ONEID (통합 계정)</option>
+                <option value="PIGSTY">PIGSTY (커뮤니티)</option>
+                <option value="FAKEPRESS">FAKEPRESS (신문 공작소)</option>
+                <option value="CHAOS OMOK">CHAOS OMOK (실시간 오목)</option>
+                <option value="NOVA">NOVA (영상 스트리밍)</option>
+                <option value="INKVOID">INKVOID (소설 서재)</option>
+                <option value="NEON STRIP">NEON STRIP (슬롯 카지노)</option>
+                <option value="WORDLENS">WORDLENS (AI 단어장)</option>
+                <option value="ATELIER J">ATELIER J (전시관)</option>
+                <option value="기타">기타 / 전체</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="guestFields" class="form-grid-3 guest-box">
+            <label>
+              <span>ONEID 아이디 (또는 문의자명) <em>*</em></span>
+              <input id="guestUsername" type="text" minlength="2" maxlength="32" placeholder="예: 정지된 계정 아이디">
+            </label>
+            <label>
+              <span>표시 닉네임 <small>(선택)</small></span>
+              <input id="guestNickname" type="text" maxlength="20" placeholder="미입력 시 아이디와 동일">
+            </label>
+            <label>
+              <span>답변 조회용 비밀번호 (4~20자) <em id="pinRequiredMark">*</em></span>
+              <input id="lookupPin" type="password" minlength="4" maxlength="20" placeholder="비로그인 조회 시 사용할 비밀번호">
+            </label>
+          </div>
+
+          <label>
+            <span>문의 제목 <em>*</em></span>
+            <input id="ticketTitle" type="text" minlength="2" maxlength="120" required placeholder="문의 요지를 간단히 입력해 주세요">
+          </label>
+
+          <label>
+            <span>상세 내용 <em>*</em></span>
+            <textarea id="ticketContent" rows="6" minlength="5" maxlength="4000" required placeholder="문의하실 내용이나 계정 정지 소명 사유를 구체적으로 작성해 주세요."></textarea>
+          </label>
+
+          <div class="form-actions">
+            <p class="form-hint" id="writeHint">
+              정지된 계정이거나 로그인하지 않은 상태에서도 아이디와 조회 비밀번호를 입력해 바로 접수할 수 있습니다.
+            </p>
+            <button id="submitTicketBtn" class="btn btn-primary" type="submit">문의 접수하기</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 2: 내 문의 / 비로그인 조회 -->
+    <section id="panel-my" class="panel" hidden>
+      <!-- 로그인 사용자 내 문의 영역 -->
+      <div id="myUserSection" class="card" hidden>
+        <div class="card-head">
+          <div>
+            <h2>내 계정의 문의 내역</h2>
+            <p class="sub" id="myUserSub">로그인한 ONEID 계정으로 접수된 모든 문의와 답변입니다.</p>
+          </div>
+          <button id="refreshMyBtn" class="btn btn-outline btn-sm" type="button">새로고침</button>
+        </div>
+        <div id="myTicketList" class="ticket-list"></div>
+      </div>
+
+      <!-- 비로그인(또는 추가) 조회 영역 -->
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>비로그인 / 정지 계정 문의 조회</h2>
+            <p class="sub">문의를 접수할 때 입력한 <strong>아이디</strong>와 <strong>조회용 비밀번호</strong>로 내역과 답변을 확인합니다.</p>
+          </div>
+        </div>
+        <form id="lookupForm" class="lookup-bar">
+          <input id="lookupUsername" type="text" minlength="2" maxlength="32" required placeholder="문의 시 입력한 ONEID 아이디">
+          <input id="lookupPinInput" type="password" minlength="4" maxlength="32" required placeholder="조회용 비밀번호 (4자 이상)">
+          <button class="btn btn-primary" type="submit">내역 조회</button>
+        </form>
+        <div id="lookupTicketList" class="ticket-list"></div>
+      </div>
+    </section>
+
+    <!-- TAB 3: 관리자 질문목록 -->
+    <section id="panel-admin" class="panel" hidden>
+      <div id="adminGateCard" class="card" hidden>
+        <div class="empty-state">
+          <h3>총괄관리자 전용 메뉴입니다</h3>
+          <p>전체 질문목록 조회 및 답변 등록은 ONEID 관리자 계정으로 로그인해야 이용할 수 있습니다.</p>
+          <button id="adminLoginPromptBtn" class="btn btn-primary" type="button">관리자 계정으로 로그인</button>
+        </div>
+      </div>
+
+      <div id="adminConsole" hidden>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">전체 문의</span>
+            <strong id="statTotal" class="stat-val">0</strong>
+          </div>
+          <div class="stat-card warn">
+            <span class="stat-label">답변 대기</span>
+            <strong id="statPending" class="stat-val">0</strong>
+          </div>
+          <div class="stat-card danger">
+            <span class="stat-label">정지 소명 건</span>
+            <strong id="statAppeal" class="stat-val">0</strong>
+          </div>
+          <div class="stat-card ok">
+            <span class="stat-label">답변 완료</span>
+            <strong id="statResolved" class="stat-val">0</strong>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h2>전체 질문목록 및 답변 관리</h2>
+              <p class="sub">접수된 문의를 클릭해 답변을 작성하거나 정지 계정의 제한을 바로 해제할 수 있습니다.</p>
+            </div>
+            <button id="refreshAdminBtn" class="btn btn-outline btn-sm" type="button">목록 새로고침</button>
+          </div>
+
+          <div class="filter-bar">
+            <select id="adminStatusFilter">
+              <option value="all">상태: 전체</option>
+              <option value="pending">답변 대기</option>
+              <option value="in_progress">처리 중</option>
+              <option value="resolved">답변 완료</option>
+              <option value="rejected">반려 / 종결</option>
+            </select>
+            <select id="adminCategoryFilter">
+              <option value="all">유형: 전체</option>
+              <option value="appeal">계정 정지 소명</option>
+              <option value="inquiry">일반 1:1 문의</option>
+              <option value="bug">오류 및 버그 제보</option>
+              <option value="suggestion">건의사항</option>
+            </select>
+            <input id="adminSearchInput" type="search" placeholder="아이디, 닉네임, 서비스, 제목, 내용 검색…">
+          </div>
+
+          <div id="adminTicketList" class="ticket-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ONEID 로그인 모달 -->
+  <div id="loginModal" class="modal-backdrop" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow">SIGN IN WITH ONEID</p>
+          <h3 id="loginModalTitle">ONEID 계정으로 로그인</h3>
+        </div>
+        <button id="closeLoginBtn" class="icon-close" type="button" aria-label="닫기">✕</button>
+      </div>
+      <p class="modal-desc">
+        ONEID 아이디와 비밀번호로 로그인합니다. 정지된 계정도 로그인하여 본인의 정지 사유와 소명 내역을 확인할 수 있습니다.
+      </p>
+      <form id="loginForm" class="login-form">
+        <label>
+          <span>ONEID 사용자명 (아이디)</span>
+          <input id="loginUsername" type="text" required autocomplete="username" placeholder="아이디 입력">
+        </label>
+        <label>
+          <span>비밀번호</span>
+          <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="비밀번호 입력">
+        </label>
+        <p id="loginError" class="login-error" hidden></p>
+        <div class="modal-actions">
+          <button id="cancelLoginBtn" class="btn btn-outline" type="button">취소</button>
+          <button id="submitLoginBtn" class="btn btn-primary" type="submit">로그인</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="app.js?v=20261029"></script>
+</body>
+</html>
