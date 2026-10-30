@@ -2,9 +2,10 @@ const TOKEN_KEY = "oneid_helpdesk_token";
 
 const CATEGORY_LABELS = {
   inquiry: "일반 1:1 문의",
+  suggestion: "아이디어 및 기능 추천",
   appeal: "계정 정지 소명",
   bug: "오류 / 버그 제보",
-  suggestion: "건의사항",
+  idea: "아이디어 및 기능 추천",
 };
 
 const STATUS_LABELS = {

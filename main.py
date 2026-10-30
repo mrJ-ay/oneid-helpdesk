@@ -206,7 +206,7 @@ class LoginInput(BaseModel):
 
 
 class TicketCreateInput(BaseModel):
-    category: Literal["appeal", "bug", "suggestion", "inquiry"] = "inquiry"
+    category: Literal["appeal", "bug", "suggestion", "inquiry", "idea"] = "inquiry"
     service_name: str = Field(default="ONEID", min_length=1, max_length=40)
     title: str = Field(min_length=2, max_length=120)
     content: str = Field(min_length=5, max_length=4000)
