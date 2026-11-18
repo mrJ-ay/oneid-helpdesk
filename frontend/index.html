@@ -45,6 +45,7 @@
     <div class="tabs" role="tablist">
       <button class="tab active" data-tab="write" type="button">1:1 문의 · 정지 소명 작성</button>
       <button class="tab" data-tab="my" type="button">내 문의 내역 · 답변 확인</button>
+      <button class="tab" data-tab="policies" type="button">📜 의회 제정 운영정책</button>
       <button class="tab" data-tab="admin" id="adminTabBtn" type="button">
         관리자 질문목록 <span id="adminBadge" class="tab-badge" hidden>0</span>
       </button>
@@ -223,6 +224,20 @@
         </div>
       </div>
     </section>
+
+    <!-- TAB 4: 의회 제정 운영정책 -->
+    <section id="panel-policies" class="panel" hidden>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <h2>📜 가상 의회 제정 공식 운영정책</h2>
+            <p class="sub">AGORA 가상 의회에서 의결되고 총괄관리자가 최종 승인·공포한 현행 운영정책입니다.</p>
+          </div>
+          <button id="refreshPoliciesBtn" class="btn btn-outline btn-sm" type="button">새로고침</button>
+        </div>
+        <div id="policyList" class="ticket-list"></div>
+      </div>
+    </section>
   </main>
 
   <!-- ONEID 로그인 모달 -->
@@ -256,6 +271,6 @@
     </div>
   </div>
 
-  <script type="module" src="app.js?v=20261029"></script>
+  <script type="module" src="app.js?v=20261119"></script>
 </body>
 </html>

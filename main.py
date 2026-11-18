@@ -91,6 +91,24 @@ def init_db() -> None:
                 ON oneid_support_tickets (user_id)
                 """
             )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS oneid_operating_policies (
+                    policy_id SERIAL PRIMARY KEY,
+                    bill_id INT,
+                    bill_no TEXT NOT NULL,
+                    service_name TEXT NOT NULL DEFAULT '전체 서비스',
+                    party_name TEXT NOT NULL DEFAULT '무소속',
+                    proposer_nickname TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    yes_votes INT NOT NULL DEFAULT 0,
+                    no_votes INT NOT NULL DEFAULT 0,
+                    approved_by TEXT NOT NULL,
+                    enacted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                )
+                """
+            )
 
 
 @app.on_event("startup")
@@ -503,6 +521,51 @@ def admin_delete_ticket(
         if not deleted:
             raise HTTPException(status_code=404, detail="문의를 찾을 수 없습니다.")
     return {"deleted": True, "ticket_id": ticket_id}
+
+
+@app.get("/api/policies")
+def list_operating_policies() -> list[dict[str, Any]]:
+    with get_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM oneid_operating_policies
+            ORDER BY enacted_at DESC, policy_id DESC
+            """
+        ).fetchall()
+    return [
+        {
+            "policy_id": r["policy_id"],
+            "bill_id": r.get("bill_id"),
+            "bill_no": r["bill_no"],
+            "service_name": r["service_name"],
+            "party_name": r["party_name"],
+            "proposer_nickname": r["proposer_nickname"],
+            "title": r["title"],
+            "content": r["content"],
+            "yes_votes": r["yes_votes"],
+            "no_votes": r["no_votes"],
+            "approved_by": r["approved_by"],
+            "enacted_at": r["enacted_at"].isoformat() if r.get("enacted_at") else None,
+        }
+        for r in rows
+    ]
+
+
+@app.delete("/api/admin/policies/{policy_id}")
+def admin_delete_policy(
+    policy_id: int,
+    authorization: str | None = Header(default=None),
+) -> dict[str, Any]:
+    require_admin(authorization)
+    with get_connection() as conn:
+        deleted = conn.execute(
+            "DELETE FROM oneid_operating_policies WHERE policy_id = %s RETURNING policy_id",
+            (policy_id,),
+        ).fetchone()
+        if not deleted:
+            raise HTTPException(status_code=404, detail="정책을 찾을 수 없습니다.")
+    return {"deleted": True, "policy_id": policy_id}
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

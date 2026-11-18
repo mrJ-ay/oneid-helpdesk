@@ -30,6 +30,7 @@ const tabs = document.querySelectorAll(".tab");
 const panels = {
   write: document.querySelector("#panel-write"),
   my: document.querySelector("#panel-my"),
+  policies: document.querySelector("#panel-policies"),
   admin: document.querySelector("#panel-admin"),
 };
 
@@ -138,6 +139,9 @@ function switchTab(tabName) {
 
   if (tabName === "my" && currentUser) {
     loadMyTickets();
+  }
+  if (tabName === "policies") {
+    loadPolicies();
   }
   if (tabName === "admin") {
     if (currentUser?.is_admin) {
@@ -535,6 +539,65 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
+async function loadPolicies() {
+  const listEl = document.querySelector("#policyList");
+  if (!listEl) return;
+  listEl.innerHTML = `<div class="empty-state"><p>운영정책을 불러오는 중…</p></div>`;
+  try {
+    const items = await api("/api/policies", { auth: false });
+    if (!items.length) {
+      listEl.innerHTML = `<div class="empty-state"><p>아직 가상 의회에서 공포된 운영정책이 없습니다.</p></div>`;
+      return;
+    }
+    listEl.innerHTML = items
+      .map(
+        (p) => `
+        <article class="ticket-card">
+          <div class="ticket-head">
+            <div class="ticket-badges">
+              <span class="badge status-resolved">📜 공포됨 · ${escapeHtml(p.bill_no)}</span>
+              <span class="badge svc-badge">${escapeHtml(p.service_name)}</span>
+              <span class="badge">${escapeHtml(p.party_name)} · 발의 ${escapeHtml(p.proposer_nickname)}</span>
+            </div>
+            <span class="ticket-date">공포일 ${formatDate(p.enacted_at)}</span>
+          </div>
+          <h3 class="ticket-title">${escapeHtml(p.title)}</h3>
+          <div class="ticket-body">${escapeHtml(p.content)}</div>
+          <div class="reply-box">
+            <div class="reply-head">
+              <strong>👑 최종 승인: ${escapeHtml(p.approved_by)}</strong>
+              <span>본회의 표결: 찬성 ${p.yes_votes} · 반대 ${p.no_votes}</span>
+            </div>
+            ${
+              currentUser?.is_admin
+                ? `<div style="margin-top:8px;text-align:right;"><button class="btn btn-danger btn-sm" type="button" data-delete-policy="${p.policy_id}">정책 폐지(삭제)</button></div>`
+                : ""
+            }
+          </div>
+        </article>
+      `
+      )
+      .join("");
+  } catch (err) {
+    listEl.innerHTML = `<div class="empty-state"><p>${escapeHtml(err.message)}</p></div>`;
+  }
+}
+
+document.querySelector("#refreshPoliciesBtn")?.addEventListener("click", loadPolicies);
+document.querySelector("#policyList")?.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-delete-policy]");
+  if (!btn) return;
+  const id = Number(btn.dataset.deletePolicy);
+  if (!confirm("이 운영정책을 고객센터에서 폐지(삭제)할까요?")) return;
+  try {
+    await api(`/api/admin/policies/${id}`, { method: "DELETE" });
+    showNotice("운영정책이 폐지되었습니다.");
+    await loadPolicies();
+  } catch (err) {
+    showNotice(err.message, true);
+  }
+});
+
 // Bootstrap
 (async function init() {
   const params = new URLSearchParams(location.search);
@@ -560,4 +623,7 @@ loginForm.addEventListener("submit", async (e) => {
     }
   }
   renderAuthUI();
+  if (params.get("tab") === "policies") {
+    switchTab("policies");
+  }
 })();
